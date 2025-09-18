@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import connectDB from './db/connection.js';
+import { Question, User, Stats, Leaderboard } from './db/models.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -14,6 +16,10 @@ const __dirname = path.dirname(__filename);
 app.use(cors());
 app.use(bodyParser.json());
 
+// Connect to MongoDB
+connectDB();
+
+// For fallback to JSON files if needed
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const USER_QUESTIONS_FILE = path.join(DATA_DIR, 'user_questions.json');
@@ -113,15 +119,57 @@ function updateLeaderboard(username, gameStats) {
 }
 
 // API: Get questions for a level, avoiding repeats for user
-app.post('/api/questions', (req, res) => {
-  const { username, level, count } = req.body;
-  if (!LEVELS.includes(level)) return res.status(400).json({ error: 'Invalid level' });
-  const allQuestions = getQuestions(level);
-  const userQuestions = getUserQuestions(username);
-  const unusedQuestions = allQuestions.filter(q => !userQuestions.includes(q.id));
-  const selected = unusedQuestions.slice(0, count);
-  setUserQuestions(username, [...userQuestions, ...selected.map(q => q.id)]);
-  res.json(selected);
+app.post('/api/questions', async (req, res) => {
+  try {
+    const { username, level, count } = req.body;
+    if (!LEVELS.includes(level)) return res.status(400).json({ error: 'Invalid level' });
+    
+    // Find the user or create a new one
+    let user = await User.findOne({ username });
+    if (!user) {
+      user = new User({ username, questionsAnswered: [] });
+      await user.save();
+    }
+    
+    // Find questions that user hasn't answered yet
+    const questions = await Question.find({ 
+      level, 
+      id: { $nin: user.questionsAnswered } 
+    }).limit(parseInt(count));
+    
+    // If MongoDB doesn't have enough questions, fallback to JSON file
+    if (questions.length === 0) {
+      const allQuestions = getQuestions(level);
+      const userQuestions = getUserQuestions(username);
+      const unusedQuestions = allQuestions.filter(q => !userQuestions.includes(q.id));
+      const selected = unusedQuestions.slice(0, count);
+      setUserQuestions(username, [...userQuestions, ...selected.map(q => q.id)]);
+      
+      // Add these questions to MongoDB for future use
+      const questionDocs = selected.map(q => new Question({
+        id: q.id,
+        question: q.question,
+        options: q.options,
+        answer: q.answer,
+        level
+      }));
+      
+      if (questionDocs.length > 0) {
+        await Question.insertMany(questionDocs);
+      }
+      
+      return res.json(selected);
+    }
+    
+    // Update user's answered questions
+    user.questionsAnswered.push(...questions.map(q => q.id));
+    await user.save();
+    
+    res.json(questions);
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    res.status(500).json({ error: 'Server error fetching questions' });
+  }
 });
 
 // API: Get lifelines
@@ -151,41 +199,116 @@ app.get('/api/score/:username', (req, res) => {
 });
 
 // API: Save detailed game stats and update leaderboard
-app.post('/api/stats', (req, res) => {
-  const { 
-    username, 
-    score, 
-    questionsAnswered, 
-    correctAnswers,
-    wrongAnswers,
-    averageTimePerQuestion,
-    totalTime,
-    level,
-    lifelinesUsed
-  } = req.body;
-  
-  const gameStats = {
-    score,
-    questionsAnswered,
-    correctAnswers,
-    wrongAnswers,
-    averageTimePerQuestion,
-    totalTime,
-    level,
-    lifelinesUsed,
-    lastPlayed: new Date().toISOString()
-  };
-  
-  // Update user stats
-  setUserStats(username, gameStats);
-  
-  // Update leaderboard
-  updateLeaderboard(username, gameStats);
-  
-  // Also update basic score
-  setUserScore(username, score);
-  
-  res.json({ success: true });
+app.post('/api/stats', async (req, res) => {
+  try {
+    const { 
+      username, 
+      score, 
+      questionsAnswered, 
+      correctAnswers,
+      wrongAnswers,
+      averageTimePerQuestion,
+      totalTime,
+      level,
+      lifelinesUsed
+    } = req.body;
+    
+    const gameStats = {
+      score,
+      questionsAnswered,
+      correctAnswers,
+      wrongAnswers,
+      averageTimePerQuestion,
+      totalTime,
+      level,
+      lifelinesUsed,
+      lastPlayed: new Date()
+    };
+    
+    // Update user stats in MongoDB
+    let stats = await Stats.findOne({ username });
+    if (stats) {
+      // Update existing stats
+      stats.score = score;
+      stats.questionsAnswered = questionsAnswered;
+      stats.correctAnswers = correctAnswers;
+      stats.wrongAnswers = wrongAnswers;
+      stats.averageTimePerQuestion = averageTimePerQuestion;
+      stats.totalTime = totalTime;
+      stats.level = level;
+      stats.lifelinesUsed = lifelinesUsed;
+      stats.lastPlayed = new Date();
+      await stats.save();
+    } else {
+      // Create new stats
+      stats = new Stats({
+        username,
+        ...gameStats
+      });
+      await stats.save();
+    }
+    
+    // Update user's score
+    let user = await User.findOne({ username });
+    if (user) {
+      user.score = score;
+      user.lastActivity = new Date();
+      await user.save();
+    } else {
+      user = new User({
+        username,
+        score,
+        lastActivity: new Date()
+      });
+      await user.save();
+    }
+    
+    // Update leaderboard
+    let leaderboard = await Leaderboard.findOne({});
+    if (!leaderboard) {
+      leaderboard = new Leaderboard({ entries: [] });
+    }
+    
+    const leaderboardEntry = {
+      username,
+      score,
+      questionsAnswered,
+      correctAnswers,
+      averageTimePerQuestion,
+      totalTime,
+      date: new Date()
+    };
+    
+    const existingEntryIndex = leaderboard.entries.findIndex(entry => entry.username === username);
+    if (existingEntryIndex >= 0) {
+      // Update if better score
+      if (leaderboardEntry.score > leaderboard.entries[existingEntryIndex].score) {
+        leaderboard.entries[existingEntryIndex] = leaderboardEntry;
+      }
+    } else {
+      leaderboard.entries.push(leaderboardEntry);
+    }
+    
+    // Sort by score (descending)
+    leaderboard.entries.sort((a, b) => b.score - a.score);
+    
+    // Keep top 100 only
+    if (leaderboard.entries.length > 100) {
+      leaderboard.entries = leaderboard.entries.slice(0, 100);
+    }
+    
+    await leaderboard.save();
+    
+    // Fallback: Also update JSON files for backward compatibility
+    setUserStats(username, gameStats);
+    updateLeaderboard(username, gameStats);
+    setUserScore(username, score);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving stats:', error);
+    res.status(500).json({ error: 'Server error saving stats' });
+  }
 });
 
 // API: Get user stats
@@ -209,9 +332,48 @@ app.get('/api/stats/:username', (req, res) => {
 });
 
 // API: Get leaderboard
-app.get('/api/leaderboard', (req, res) => {
-  const leaderboard = getLeaderboard();
-  res.json(leaderboard);
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    // Get leaderboard from MongoDB
+    let leaderboard = await Leaderboard.findOne({});
+    
+    // If no leaderboard in MongoDB, try fallback to JSON file
+    if (!leaderboard || leaderboard.entries.length === 0) {
+      const jsonLeaderboard = getLeaderboard();
+      
+      // If we got data from JSON, save it to MongoDB for future
+      if (jsonLeaderboard.leaderboard && jsonLeaderboard.leaderboard.length > 0) {
+        if (!leaderboard) {
+          leaderboard = new Leaderboard({
+            entries: jsonLeaderboard.leaderboard.map(entry => ({
+              username: entry.username,
+              score: entry.score,
+              questionsAnswered: entry.questionsAnswered,
+              correctAnswers: entry.correctAnswers,
+              averageTimePerQuestion: entry.averageTimePerQuestion,
+              totalTime: entry.totalTime,
+              date: entry.date ? new Date(entry.date) : new Date()
+            }))
+          });
+          await leaderboard.save();
+        }
+        
+        return res.json({ leaderboard: leaderboard.entries });
+      }
+      
+      // No data in MongoDB or JSON file
+      return res.json({ leaderboard: [] });
+    }
+    
+    // Return MongoDB leaderboard
+    res.json({ leaderboard: leaderboard.entries });
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    
+    // Fallback to JSON file if MongoDB fails
+    const jsonLeaderboard = getLeaderboard();
+    res.json(jsonLeaderboard);
+  }
 });
 
 // API: Reset user questions (for testing)
