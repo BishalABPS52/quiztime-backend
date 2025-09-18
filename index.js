@@ -241,6 +241,25 @@ app.get('/api', (req, res) => {
   });
 });
 
+// Root route for documentation
+app.get('/', (req, res) => {
+  res.json({
+    name: 'QuizTime API',
+    description: 'Backend API for QuizTime application',
+    version: '1.0.0',
+    status: 'running',
+    documentation: {
+      health: '/health - API health check',
+      api: '/api - API information and available endpoints',
+      questions: '/api/questions - Get quiz questions (POST)',
+      lifelines: '/api/lifelines - Get available lifelines (GET)',
+      checkAnswer: '/api/check-answer - Verify answers (POST)',
+      stats: '/api/stats/:username - Get user statistics (GET)',
+      leaderboard: '/api/leaderboard - Get game leaderboard (GET)'
+    }
+  });
+});
+
 // Check if answer is correct
 app.post('/api/check-answer', (req, res) => {
   const { level, questionId, answer } = req.body;
