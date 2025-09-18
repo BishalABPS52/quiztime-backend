@@ -9,3 +9,7 @@ services:
     envVars:
       - key: PORT
         value: 10000
+      - key: MONGODB_URI
+        value: mongodb+srv://bs426808_db_user:8nHyut3Mf0MriFVW@quiztimeweb.tbhhej8.mongodb.net/quiztime
+      - key: NODE_ENV
+        value: production
