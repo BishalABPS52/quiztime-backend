@@ -1,17 +1,13 @@
 import mongoose from 'mongoose';
 
-// MongoDB connection URL (from environment variable)
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/quiztime';
+// MongoDB connection URL (from environment variable or use the direct connection string)
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://bs426808_db_user:8nHyut3Mf0MriFVW@quiztimeweb.tbhhej8.mongodb.net/quiztime';
 
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(MONGODB_URI, {
-      // These options are no longer needed in newer versions of mongoose
-      // but added for compatibility
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    // Connect with modern options (no deprecated options)
+    const conn = await mongoose.connect(MONGODB_URI);
     
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     return conn;
