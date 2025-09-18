@@ -1,0 +1,22 @@
+[
+  { "id": "m1", "question": "San Siro is a stadium located in which city?", "options": ["Milan", "Rome", "Paris", "Madrid"], "answer": "Milan" },
+  { "id": "m2", "question": "In which city would you find the historic landmark, the Alhambra?", "options": ["Granada", "Seville", "Madrid", "Barcelona"], "answer": "Granada" },
+  { "id": "m3", "question": "Which city is known as the 'City of Canals'?", "options": ["Venice", "Amsterdam", "Paris", "Bangkok"], "answer": "Venice" },
+  { "id": "m4", "question": "In which city is the famous landmark, the Christ the Redeemer statue, located?", "options": ["Rio de Janeiro", "Sao Paulo", "Buenos Aires", "Mexico City"], "answer": "Rio de Janeiro" },
+  { "id": "m5", "question": "Which city is home to the historic landmark, the Colosseum?", "options": ["Rome", "Athens", "Paris", "London"], "answer": "Rome" },
+  { "id": "m6", "question": "What is the SI unit of electric current?", "options": ["Ampere", "Volt", "Watt", "Ohm"], "answer": "Ampere" },
+  { "id": "m7", "question": "Who is known as the father of modern physics?", "options": ["Albert Einstein", "Isaac Newton", "Niels Bohr", "Galileo Galilei"], "answer": "Albert Einstein" },
+  { "id": "m8", "question": "What is the speed of light in a vacuum?", "options": ["approax. 300,000,000 m/s", "approax. 350,000,000 m/s", "150,000,000 m/s", "400,000,000 m/s"], "answer": "approax. 300,000,000 m/s" },
+  { "id": "m9", "question": "What is the principle stating that energy cannot be created or destroyed?", "options": ["Conservation of Energy", "Newton's First Law", "Second Law of Thermodynamics", "Law of Inertia"], "answer": "Conservation of Energy" },
+  { "id": "m10", "question": "Oxalic acid is commonly found in which vegetable?", "options": ["Spinach", "Carrot", "Potato", "Apple"], "answer": "Spinach" },
+  { "id": "m11", "question": "Which gas is most commonly used in light bulbs?", "options": ["Argon", "Oxygen", "Nitrogen", "Helium"], "answer": "Argon" },
+  { "id": "m12", "question": "What is the pH level of Vinegar?", "options": ["around 3", "around 1", "exctly 2", "around 4"], "answer": "around 3" },
+  { "id": "m13", "question": "Which element has the chemical symbol 'Na'?", "options": ["Sodium", "Nitrogen", "Neon", "Nickel"], "answer": "Sodium" },
+  { "id": "m14", "question": "Who won the Golden Boot at the 2018 FIFA World Cup?", "options": ["Harry Kane", "Cristiano Ronaldo", "Lionel Messi", "Kylian Mbappe"], "answer": "Harry Kane" },
+  { "id": "m15", "question": "What does the acronym 'IMF' stand for?", "options": ["International Monetary Fund", "International Management Fund", "Internal Monetary Fund", "International Market Federation"], "answer": "International Monetary Fund" },
+  { "id": "m16", "question": "Who is the current Secretary-General of the United Nations?", "options": ["António Guterres", "Ban Ki-moon", "Kofi Annan", "Boutros Boutros-Ghali"], "answer": "António Guterres" },
+  { "id": "m17", "question": "Which country is known as the Land of the Midnight Sun?", "options": ["Norway", "Japan", "Denmark", "Czech"], "answer": "Norway" },
+  { "id": "m18", "question": "What is the 2nd largest hot desert in the world?", "options": ["Arabian Desert", "Gobi Desert", "Thar Desert", "Arctic Desert"], "answer": "Arabian Desert" },
+  { "id": "m19", "question": "Which planet is known as the Earth's Twins?", "options": ["Venus", "Keplar", "Uranus", "Neptune"], "answer": "Venus" },
+  { "id": "m20", "question": "Who wrote the Hamlet?", "options": ["William Shakespeare", "Charles Dickens", "J.K. Rowling", "George Orwell"], "answer": "William Shakespeare" }
+]

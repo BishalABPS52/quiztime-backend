@@ -1,0 +1,11 @@
+# Render web service
+services:
+  - type: web
+    name: quiztime-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000

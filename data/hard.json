@@ -1,0 +1,22 @@
+[
+  { "id": "h1", "question": "In which year did World War II end?", "options": ["1945", "1939", "1942", "1950"], "answer": "1945" },
+  { "id": "h2", "question": "Who was the second person to walk on the Moon?", "options": ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "Michael Collins"], "answer": "Buzz Aldrin" },
+  { "id": "h3", "question": "What does ANI stand for?", "options": ["Artificial Narrow Intelligence", "Artificial Natural Intelligence", "Artificial Neural Intelligence", "Artificial Normal Intelligence"], "answer": "Artificial Narrow Intelligence" },
+  { "id": "h4", "question": "In which year was the US Declaration of Independence signed?", "options": ["1776", "1783", "1492", "1804"], "answer": "1776" },
+  { "id": "h5", "question": "Who composed the symphony known as the 'Jupiter Symphony'?", "options": ["Wolfgang Amadeus Mozart", "Ludwig van Beethoven", "Johann Sebastian Bach", "Franz Schubert"], "answer": "Wolfgang Amadeus Mozart" },
+  { "id": "h6", "question": "In which year did the Apollo 11 mission land the first humans on the Moon?", "options": ["1969", "1965", "1971", "1963"], "answer": "1969" },
+  { "id": "h7", "question": "Which element has the chemical symbol 'W'?", "options": ["Tungsten", "Tantalum", "Thorium", "Wolfram"], "answer": "Tungsten" },
+  { "id": "h8", "question": "Who is credited with the discovery of penicillin?", "options": ["Alexander Fleming", "Marie Curie", "Louis Pasteur", "Joseph Lister"], "answer": "Alexander Fleming" },
+  { "id": "h9", "question": "Which country hosted the 2008 Summer Olympics?", "options": ["China", "Greece", "Australia", "United Kingdom"], "answer": "China" },
+  { "id": "h10", "question": "Who won the Academy Award for Best Director in 2019?", "options": ["Bong Joon-ho", "Quentin Tarantino", "Martin Scorsese", "Sam Mendes"], "answer": "Bong Joon-ho" },
+  { "id": "h11", "question": "Which artist painted the 'Mona Lisa'?", "options": ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], "answer": "Leonardo da Vinci" },
+  { "id": "h12", "question": "In which year did the Titanic sink?", "options": ["1912", "1905", "1920", "1898"], "answer": "1912" },
+  { "id": "h13", "question": "Who was the first emperor of China?", "options": ["Qin Shi Huang", "Han Wudi", "Emperor Wu of Han", "Emperor Gaozu of Han"], "answer": "Qin Shi Huang" },
+  { "id": "h14", "question": "Which planet is known as the 'Morning Star'?", "options": ["Venus", "Mars", "Mercury", "Jupiter"], "answer": "Venus" },
+  { "id": "h15", "question": "Who wrote the novel '1984'?", "options": ["George Orwell", "Aldous Huxley", "Ray Bradbury", "H.G. Wells"], "answer": "George Orwell" },
+  { "id": "h16", "question": "Which country was formerly known as Ceylon?", "options": ["Sri Lanka", "Thailand", "Myanmar", "Nepal"], "answer": "Sri Lanka" },
+  { "id": "h17", "question": "Who developed the theory of general relativity?", "options": ["Albert Einstein", "Isaac Newton", "Niels Bohr", "Marie Curie"], "answer": "Albert Einstein" },
+  { "id": "h18", "question": "Which element has the atomic number 79?", "options": ["Gold", "Silver", "Platinum", "Copper"], "answer": "Gold" },
+  { "id": "h19", "question": "Who was the first female Prime Minister of the United Kingdom?", "options": ["Margaret Thatcher", "Theresa May", "Elizabeth II", "Indira Gandhi"], "answer": "Margaret Thatcher" },
+  { "id": "h20", "question": "Which country was the first to grant women the right to vote?", "options": ["New Zealand", "United States", "United Kingdom", "Australia"], "answer": "New Zealand" }
+]
