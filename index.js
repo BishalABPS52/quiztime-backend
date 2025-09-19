@@ -8,6 +8,9 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import connectDB from './db/connection.js';
 import { Question, User, Stats, Leaderboard } from './db/models.js';
+import adminRoutes from './admin.js';
+import authRoutes, { authenticateToken } from './auth.js';
+import userRoutes from './user.js';
 
 // Load environment variables
 dotenv.config();
@@ -421,10 +424,20 @@ app.get('/', (req, res) => {
       lifelines: '/api/lifelines - Get available lifelines (GET)',
       checkAnswer: '/api/check-answer - Verify answers (POST)',
       stats: '/api/stats/:username - Get user statistics (GET)',
-      leaderboard: '/api/leaderboard - Get game leaderboard (GET)'
+      leaderboard: '/api/leaderboard - Get game leaderboard (GET)',
+      admin: '/admin - Admin dashboard (requires authentication)'
     }
   });
 });
+
+// Mount auth routes
+app.use('/api', authRoutes);
+
+// Mount user routes
+app.use('/api/user', userRoutes);
+
+// Mount admin routes
+app.use('/admin', adminRoutes);
 
 // Check if answer is correct
 app.post('/api/check-answer', (req, res) => {
