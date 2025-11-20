@@ -1,8 +1,30 @@
 import express from 'express';
+import winston from 'winston';
 import { authenticateToken } from './auth.js';
 import { User, Stats } from './db/models.js';
 
 const router = express.Router();
+
+// Configure logger
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'user' },
+  transports: [
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' })
+  ],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple()
+  }));
+}
 
 // Get user profile
 router.get('/profile', authenticateToken, async (req, res) => {
@@ -37,7 +59,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
       } : null
     });
   } catch (error) {
-    console.error('Profile fetch error:', error);
+    logger.error('Profile fetch error:', error);
     res.status(500).json({ message: 'Server error fetching profile' });
   }
 });
@@ -73,7 +95,7 @@ router.patch('/profile', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Profile update error:', error);
+    logger.error('Profile update error:', error);
     res.status(500).json({ message: 'Server error updating profile' });
   }
 });

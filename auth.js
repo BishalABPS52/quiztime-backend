@@ -3,21 +3,58 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import winston from 'winston';
 import { User } from './db/models.js';
 
 dotenv.config();
 
-const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'quiztime-default-secret';
+// Configure logger
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'auth' },
+  transports: [
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' })
+  ],
+});
 
-// Configure email transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple()
+  }));
+}
+
+const router = express.Router();
+
+// Validate required environment variables
+if (!process.env.JWT_SECRET) {
+  logger.error('JWT_SECRET environment variable is required');
+  throw new Error('JWT_SECRET environment variable is required');
+}
+
+if (process.env.JWT_SECRET.length < 64) {
+  logger.warn('JWT_SECRET should be at least 64 characters for security');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Configure email transporter with environment variables
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+  logger.warn('Email configuration missing - email features will be disabled');
+}
+
+const transporter = process.env.EMAIL_USER && process.env.EMAIL_PASSWORD ? nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE || 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
-});
+}) : null;
 
 // Generate 6-digit verification code
 const generateVerificationCode = () => {
@@ -46,56 +83,76 @@ router.post('/register/', async (req, res) => {
       return res.status(400).json({ message: 'Username already taken' });
     }
 
-    // Generate verification code
+    // Generate verification code (for future use)
     const verification_code = generateVerificationCode();
+
+    // Generate unique userId
+    const userId = `qt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new user
+    // Create new user with proper email verification
     const newUser = new User({
+      userId,
       username,
       email,
       password: hashedPassword,
       verification_code,
-      is_verified: false,
+      is_verified: false, // Require email verification for security
     });
 
     await newUser.save();
 
     // Send verification email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'QuizTime - Verify Your Email',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4F46E5;">Welcome to QuizTime!</h2>
-          <p>Thank you for registering. Please verify your email using the code below:</p>
-          <div style="background-color: #F3F4F6; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
-            <h1 style="font-size: 32px; margin: 0; color: #111827;">${verification_code}</h1>
+    let emailSent = false;
+    if (transporter && process.env.EMAIL_PASSWORD !== 'jmlo zlum jpjl gdsl') {
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'QuizTime - Verify Your Email',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #4F46E5;">Welcome to QuizTime!</h2>
+            <p>Thank you for registering. Please verify your email address to complete registration.</p>
+            <p><strong>Verification Code: ${verification_code}</strong></p>
+            <p>Enter this code on the verification page to activate your account.</p>
+            <p>Your username: <strong>${username}</strong></p>
+            <p>Happy Quizzing!</p>
+            <p style="margin-top: 30px; font-size: 12px; color: #6B7280;">© QuizTime Team</p>
           </div>
-          <p>This code will expire in 24 hours.</p>
-          <p>If you didn't register for QuizTime, you can safely ignore this email.</p>
-          <p>Happy Quizzing!</p>
-          <p style="margin-top: 30px; font-size: 12px; color: #6B7280;">© QuizTime Team</p>
-        </div>
-      `,
-    };
+        `,
+      };
 
-    try {
-      await transporter.sendMail(mailOptions);
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      // Continue even if email fails, user can request another verification code
+      try {
+        await transporter.sendMail(mailOptions);
+        logger.info(`Verification email sent to ${email}`);
+        emailSent = true;
+      } catch (emailError) {
+        logger.error('Email sending failed:', emailError);
+        // Continue with registration even if email fails
+      }
+    } else {
+      logger.warn('Email not configured properly - verification code will be shown in response');
     }
 
     res.status(201).json({
-      message: 'Registration successful. Verification code sent to your email.',
+      message: emailSent 
+        ? 'Registration successful. Please check your email for verification code.'
+        : 'Registration successful. Email not configured - use verification code below.',
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        isVerified: newUser.is_verified
+      },
+      // Include verification code in response when email is not sent
+      ...(emailSent ? {} : { verificationCode: verification_code, 
+          developmentNote: 'Email not configured. Use this code for verification.' })
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error('Registration error:', error);
     res.status(500).json({ message: 'Server error during registration' });
   }
 });
@@ -133,7 +190,7 @@ router.post('/verify-email/', async (req, res) => {
 
     res.json({ message: 'Email verified successfully. You can now log in.' });
   } catch (error) {
-    console.error('Email verification error:', error);
+    logger.error('Email verification error:', error);
     res.status(500).json({ message: 'Server error during verification' });
   }
 });
@@ -151,18 +208,24 @@ router.post('/login/', async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
+      logger.warn(`Login attempt with non-existent email: ${email}`);
       return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Check verification status
-    if (!user.is_verified) {
-      return res.status(401).json({ message: 'Please verify your email before logging in' });
     }
 
     // Check password
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
+      logger.warn(`Invalid password attempt for user: ${email}`);
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Check if user is verified
+    if (!user.is_verified) {
+      logger.warn(`Login attempt by unverified user: ${user.email}`);
+      return res.status(401).json({ 
+        message: 'Please verify your email before logging in',
+        requiresVerification: true 
+      });
     }
 
     // Generate JWT token
@@ -176,6 +239,8 @@ router.post('/login/', async (req, res) => {
     user.lastActivity = new Date();
     await user.save();
 
+    logger.info(`Successful login for user: ${user.username}`);
+    
     res.json({
       token,
       user: {
@@ -186,10 +251,11 @@ router.post('/login/', async (req, res) => {
       message: 'Login successful',
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error:', error);
     res.status(500).json({ message: 'Server error during login' });
   }
 });
+
 
 // Middleware to protect routes (require authentication)
 export const authenticateToken = (req, res, next) => {

@@ -1,1 +1,85 @@
-{}
+{
+  "users": [
+    {
+      "id": "user_1",
+      "userId": "qt1",
+      "username": "testuser1",
+      "email": "testuser1@example.com",
+      "password": "$2a$10$xJwTNg1PDrLMVW/Vyb8V6.u3FJvijDuGo5WUVvOI.L5NZXcVBPmVW",
+      "createdAt": "2025-09-18T00:00:00.000Z",
+      "lastActivity": "2025-09-19T00:00:00.000Z"
+    },
+    {
+      "id": "user_2",
+      "userId": "qt2",
+      "username": "johndoe",
+      "email": "john@example.com",
+      "password": "$2a$10$xJwTNg1PDrLMVW/Vyb8V6.u3FJvijDuGo5WUVvOI.L5NZXcVBPmVW",
+      "createdAt": "2025-09-17T00:00:00.000Z",
+      "lastActivity": "2025-09-18T00:00:00.000Z"
+    },
+    {
+      "id": "user_3",
+      "userId": "qt3",
+      "username": "janesmith",
+      "email": "jane@example.com",
+      "password": "$2a$10$xJwTNg1PDrLMVW/Vyb8V6.u3FJvijDuGo5WUVvOI.L5NZXcVBPmVW",
+      "createdAt": "2025-09-16T00:00:00.000Z",
+      "lastActivity": "2025-09-19T00:00:00.000Z"
+    },
+    {
+      "id": "user_4",
+      "userId": "qt4",
+      "username": "admin",
+      "email": "admin@quiztime.com",
+      "password": "$2a$10$xJwTNg1PDrLMVW/Vyb8V6.u3FJvijDuGo5WUVvOI.L5NZXcVBPmVW",
+      "createdAt": "2025-09-15T00:00:00.000Z",
+      "lastActivity": "2025-09-19T00:00:00.000Z"
+    },
+    {
+      "id": "user_5",
+      "userId": "qt5",
+      "username": "bishal",
+      "email": "bishal@example.com",
+      "password": "$2a$10$xJwTNg1PDrLMVW/Vyb8V6.u3FJvijDuGo5WUVvOI.L5NZXcVBPmVW",
+      "createdAt": "2025-09-14T00:00:00.000Z",
+      "lastActivity": "2025-09-19T00:00:00.000Z"
+    },
+    {
+      "id": "user_6",
+      "userId": "qt6",
+      "username": "test",
+      "email": "test@test.com",
+      "password": "$2a$10$xJwTNg1PDrLMVW/Vyb8V6.u3FJvijDuGo5WUVvOI.L5NZXcVBPmVW",
+      "createdAt": "2025-09-19T00:00:00.000Z",
+      "lastActivity": "2025-09-19T00:00:00.000Z"
+    },
+    {
+      "id": "user_7",
+      "userId": "qt7",
+      "username": "user",
+      "email": "user@example.com",
+      "password": "$2a$10$xJwTNg1PDrLMVW/Vyb8V6.u3FJvijDuGo5WUVvOI.L5NZXcVBPmVW",
+      "createdAt": "2025-09-19T00:00:00.000Z",
+      "lastActivity": "2025-09-19T00:00:00.000Z"
+    },
+    {
+      "id": "user_8",
+      "userId": "qt8",
+      "username": "dev",
+      "email": "dev@quiztime.com",
+      "password": "$2a$10$xJwTNg1PDrLMVW/Vyb8V6.u3FJvijDuGo5WUVvOI.L5NZXcVBPmVW",
+      "createdAt": "2025-09-19T00:00:00.000Z",
+      "lastActivity": "2025-09-19T00:00:00.000Z"
+    },
+    {
+      "id": "user_9",
+      "userId": "qt9",
+      "username": "demo",
+      "email": "demo@demo.com",
+      "password": "$2a$10$xJwTNg1PDrLMVW/Vyb8V6.u3FJvijDuGo5WUVvOI.L5NZXcVBPmVW",
+      "createdAt": "2025-09-19T00:00:00.000Z",
+      "lastActivity": "2025-09-19T00:00:00.000Z"
+    }
+  ]
+}

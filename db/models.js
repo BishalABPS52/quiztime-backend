@@ -19,11 +19,6 @@ const questionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  level: {
-    type: String,
-    required: true,
-    enum: ['easy', 'medium', 'hard']
-  },
   category: {
     type: String,
     default: 'general'
@@ -32,6 +27,15 @@ const questionSchema = new mongoose.Schema({
 
 // User Schema
 const userSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: false
+  },
+  userId: {
+    type: String,
+    required: true,
+    unique: true
+  },
   username: {
     type: String,
     required: true,
@@ -73,12 +77,28 @@ const userSchema = new mongoose.Schema({
 
 // Stats Schema
 const statsSchema = new mongoose.Schema({
+  id: {
+    type: Number,
+    required: true
+  },
+  userId: {
+    type: String,
+    required: true
+  },
   username: {
     type: String,
     required: true,
     unique: true
   },
-  score: {
+  gamesPlayed: {
+    type: Number,
+    default: 0
+  },
+  gamesCompleted: {
+    type: Number,
+    default: 0
+  },
+  totalPrizeMoney: {
     type: Number,
     default: 0
   },
@@ -86,44 +106,32 @@ const statsSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  correctAnswers: {
+  accuracy: {
     type: Number,
     default: 0
   },
-  wrongAnswers: {
-    type: Number,
-    default: 0
-  },
-  averageTimePerQuestion: {
-    type: Number,
-    default: 0
-  },
-  totalTime: {
-    type: Number,
-    default: 0
-  },
-  level: {
+  averageCompletionTime: {
     type: String,
-    default: 'easy'
-  },
-  lifelinesUsed: {
-    type: Object,
-    default: {}
-  },
-  lastPlayed: {
-    type: Date,
-    default: Date.now
+    default: "0:00"
   }
 });
 
-// Leaderboard Entry Schema
+// Leaderboard Schema with entries array to match JSON structure
 const leaderboardSchema = new mongoose.Schema({
-  entries: [{
-    username: {
+  leaderboard: [{
+    id: {
+      type: Number,
+      required: true
+    },
+    userId: {
       type: String,
       required: true
     },
-    score: {
+    playerName: {
+      type: String,
+      required: true
+    },
+    prizeWon: {
       type: Number,
       required: true
     },
@@ -131,21 +139,17 @@ const leaderboardSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
-    correctAnswers: {
+    totalQuestions: {
       type: Number,
       default: 0
     },
-    averageTimePerQuestion: {
-      type: Number,
-      default: 0
-    },
-    totalTime: {
-      type: Number,
-      default: 0
-    },
-    date: {
+    completionDate: {
       type: Date,
-      default: Date.now
+      required: true
+    },
+    completionTime: {
+      type: Number,
+      default: 0
     }
   }]
 });

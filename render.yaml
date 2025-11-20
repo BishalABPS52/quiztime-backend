@@ -1,4 +1,5 @@
-# Render web service
+# Render web service configuration
+# IMPORTANT: Set environment variables in Render dashboard, not here!
 services:
   - type: web
     name: quiztime-backend
@@ -6,10 +7,21 @@ services:
     plan: free
     buildCommand: npm install
     startCommand: npm start
+    healthCheckPath: /health
+    # Environment variables should be set in Render dashboard for security:
+    # MONGODB_URI - Your production MongoDB connection string
+    # JWT_SECRET - Strong 64+ character secret for JWT tokens
+    # ADMIN_JWT_SECRET - Separate admin JWT secret  
+    # EMAIL_USER - Your email service username
+    # EMAIL_PASSWORD - Your email service app password
+    # CORS_ORIGIN - Your frontend domain URL
+    # ADMIN_EMAILS - Comma-separated admin email addresses
+    # ADMIN_USERNAMES - Comma-separated admin usernames
     envVars:
-      - key: PORT
-        value: 10000
-      - key: MONGODB_URI
-        value: mongodb+srv://bs426808_db_user:8nHyut3Mf0MriFVW@quiztimeweb.tbhhej8.mongodb.net/quiztime
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
+      - key: LOG_LEVEL
+        value: info
+      # DO NOT add secrets here - use Render dashboard environment variables

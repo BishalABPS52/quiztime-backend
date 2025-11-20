@@ -1,1 +1,59 @@
-{}
+{
+  "users": [
+    {
+      "id": 1,
+      "userId": "qt1",
+      "username": "testuser1",
+      "gamesPlayed": 29,
+      "gamesCompleted": 2,
+      "totalPrizeMoney": 5324938,
+      "questionsAnswered": 155,
+      "accuracy": 93,
+      "averageCompletionTime": "5:42"
+    },
+    {
+      "id": 2,
+      "userId": "qt2",
+      "username": "johndoe",
+      "gamesPlayed": 15,
+      "gamesCompleted": 5,
+      "totalPrizeMoney": 12800000,
+      "questionsAnswered": 98,
+      "accuracy": 87,
+      "averageCompletionTime": "4:15"
+    },
+    {
+      "id": 3,
+      "userId": "qt3",
+      "username": "janesmith",
+      "gamesPlayed": 42,
+      "gamesCompleted": 1,
+      "totalPrizeMoney": 700000000,
+      "questionsAnswered": 203,
+      "accuracy": 95,
+      "averageCompletionTime": "6:30"
+    },
+    {
+      "id": 4,
+      "userId": "qt4",
+      "username": "admin",
+      "gamesPlayed": 8,
+      "gamesCompleted": 0,
+      "totalPrizeMoney": 400000,
+      "questionsAnswered": 45,
+      "accuracy": 78,
+      "averageCompletionTime": "3:22"
+    },
+    {
+      "id": 5,
+      "userId": "qt5",
+      "username": "bishal",
+      "gamesPlayed": 35,
+      "gamesCompleted": 3,
+      "totalPrizeMoney": 28600000,
+      "questionsAnswered": 187,
+      "accuracy": 91,
+      "averageCompletionTime": "5:58"
+    }
+  ]
+}

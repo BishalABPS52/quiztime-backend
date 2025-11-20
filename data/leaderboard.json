@@ -1,3 +1,54 @@
 {
-  "leaderboard": []
+  "leaderboard": [
+    {
+      "id": 1,
+      "userId": "qt1",
+      "playerName": "testuser1",
+      "prizeWon": 12800000,
+      "questionsAnswered": 10,
+      "totalQuestions": 15,
+      "completionDate": "2024-01-15T14:30:00Z",
+      "completionTime": 4.75
+    },
+    {
+      "id": 2,
+      "userId": "qt2",
+      "playerName": "johndoe",
+      "prizeWon": 3200000,
+      "questionsAnswered": 8,
+      "totalQuestions": 15,
+      "completionDate": "2024-01-14T16:45:00Z",
+      "completionTime": 3.50
+    },
+    {
+      "id": 3,
+      "userId": "qt3",
+      "playerName": "janesmith",
+      "prizeWon": 700000000,
+      "questionsAnswered": 15,
+      "totalQuestions": 15,
+      "completionDate": "2024-01-13T19:20:00Z",
+      "completionTime": 7.20
+    },
+    {
+      "id": 4,
+      "userId": "qt4",
+      "playerName": "admin",
+      "prizeWon": 800000,
+      "questionsAnswered": 6,
+      "totalQuestions": 15,
+      "completionDate": "2024-01-12T11:15:00Z",
+      "completionTime": 2.75
+    },
+    {
+      "id": 5,
+      "userId": "qt5",
+      "playerName": "bishal",
+      "prizeWon": 25600000,
+      "questionsAnswered": 11,
+      "totalQuestions": 15,
+      "completionDate": "2024-01-11T20:10:00Z",
+      "completionTime": 5.25
+    }
+  ]
 }

@@ -1,99 +1,164 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import path from 'path';
 import fs from 'fs';
+import winston from 'winston';
 import { fileURLToPath } from 'url';
+import { User } from './db/models.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const router = express.Router();
 
-// Admin authentication middleware
-const authenticateAdmin = (req, res, next) => {
-  // Get the Authorization header from the request
-  const authHeader = req.headers.authorization;
-  
-  // Check if the Authorization header exists
-  if (!authHeader) {
-    return res.status(401).send(`
-      <html>
-        <head><title>Authentication Required</title>
-        <style>
-          body {
-            font-family: sans-serif;
-            max-width: 500px;
-            margin: 100px auto;
-            padding: 20px;
-            text-align: center;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          }
-          h1 { color: #1a73e8; }
-          p { margin-bottom: 20px; }
-          a {
-            display: inline-block;
-            background-color: #1a73e8;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-          }
-        </style>
-        </head>
-        <body>
-          <h1>Authentication Required</h1>
-          <p>You need to be logged in to access the admin area.</p>
-          <a href="/webquiztime/admin">Go to Login</a>
-        </body>
-      </html>
-    `);
+// Configure logger for admin operations
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'admin' },
+  transports: [
+    new winston.transports.File({ filename: 'logs/admin.log' }),
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' })
+  ],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple()
+  }));
+}
+
+// Validate admin JWT secret
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || process.env.JWT_SECRET;
+if (!ADMIN_JWT_SECRET) {
+  logger.error('ADMIN_JWT_SECRET environment variable is required');
+  throw new Error('ADMIN_JWT_SECRET environment variable is required');
+}
+
+// Admin authentication middleware with proper JWT validation
+const authenticateAdmin = async (req, res, next) => {
+  try {
+    // Get the Authorization header from the request
+    const authHeader = req.headers.authorization;
+    
+    // Check if the Authorization header exists
+    if (!authHeader) {
+      logger.warn('Admin access attempt without authorization header');
+      return res.status(401).send(`
+        <html>
+          <head><title>Authentication Required</title>
+          <style>
+            body {
+              font-family: sans-serif;
+              max-width: 500px;
+              margin: 100px auto;
+              padding: 20px;
+              text-align: center;
+              background-color: #f8f9fa;
+              border-radius: 8px;
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            h1 { color: #1a73e8; }
+            p { margin-bottom: 20px; }
+            a {
+              display: inline-block;
+              background-color: #1a73e8;
+              color: white;
+              padding: 10px 20px;
+              text-decoration: none;
+              border-radius: 4px;
+            }
+          </style>
+          </head>
+          <body>
+            <h1>Authentication Required</h1>
+            <p>You need to be logged in as an administrator to access this area.</p>
+            <p>Please contact your system administrator for access.</p>
+          </body>
+        </html>
+      `);
+    }
+    
+    // Extract the token from the Authorization header
+    const token = authHeader.split(' ')[1];
+    
+    if (!token) {
+      logger.warn('Admin access attempt with malformed authorization header');
+      return res.status(401).json({ message: 'Authentication token required' });
+    }
+    
+    // Verify JWT token
+    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
+    
+    // Check if user exists and is admin
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      logger.warn(`Admin access attempt with invalid user ID: ${decoded.id}`);
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    // Check if user has admin privileges (you can add isAdmin field to User model)
+    // For now, we'll check if the user is in a predefined admin list
+    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(email => email.trim());
+    const adminUsernames = (process.env.ADMIN_USERNAMES || 'admin').split(',').map(username => username.trim());
+    
+    if (!adminEmails.includes(user.email) && !adminUsernames.includes(user.username)) {
+      logger.warn(`Non-admin user attempted admin access: ${user.email}`);
+      return res.status(403).send(`
+        <html>
+          <head><title>Access Denied</title>
+          <style>
+            body {
+              font-family: sans-serif;
+              max-width: 500px;
+              margin: 100px auto;
+              padding: 20px;
+              text-align: center;
+              background-color: #f8f9fa;
+              border-radius: 8px;
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            h1 { color: #ea4335; }
+            p { margin-bottom: 20px; }
+          </style>
+          </head>
+          <body>
+            <h1>Access Denied</h1>
+            <p>You do not have administrator privileges.</p>
+          </body>
+        </html>
+      `);
+    }
+    
+    // Store user info for use in routes
+    req.admin = {
+      id: user._id,
+      username: user.username,
+      email: user.email
+    };
+    
+    logger.info(`Admin access granted to: ${user.username}`);
+    next();
+    
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      logger.warn('Admin access attempt with invalid JWT token');
+      return res.status(403).json({ message: 'Invalid authentication token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      logger.warn('Admin access attempt with expired JWT token');
+      return res.status(403).json({ message: 'Authentication token expired' });
+    }
+    
+    logger.error('Admin authentication error:', error);
+    return res.status(500).json({ message: 'Authentication error' });
   }
-  
-  // Extract the token from the Authorization header
-  // Format: "Bearer TOKEN"
-  const token = authHeader.split(' ')[1];
-  
-  // In a real implementation, you would validate the JWT token
-  // For this example, we'll use a simple check
-  // This should be replaced with proper JWT verification in production
-  if (token !== 'temp-demo-token' && token !== 'admin-secret-token') {
-    return res.status(403).send(`
-      <html>
-        <head><title>Access Denied</title>
-        <style>
-          body {
-            font-family: sans-serif;
-            max-width: 500px;
-            margin: 100px auto;
-            padding: 20px;
-            text-align: center;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          }
-          h1 { color: #ea4335; }
-          p { margin-bottom: 20px; }
-          a {
-            display: inline-block;
-            background-color: #1a73e8;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-          }
-        </style>
-        </head>
-        <body>
-          <h1>Access Denied</h1>
-          <p>Invalid authentication token.</p>
-          <a href="/webquiztime/admin">Return to Login</a>
-        </body>
-      </html>
-    `);
-  }
-  
-  // If authentication is successful, proceed to the next middleware/route handler
-  next();
 };
 
 // Admin dashboard HTML template
@@ -377,6 +442,64 @@ Loading logs...
 </body>
 </html>
 `;
+
+// Admin login endpoint
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password required' });
+    }
+    
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      logger.warn(`Admin login attempt with non-existent email: ${email}`);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    // Verify password
+    const bcrypt = await import('bcryptjs');
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      logger.warn(`Admin login attempt with invalid password: ${email}`);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    // Check admin privileges
+    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(email => email.trim());
+    const adminUsernames = (process.env.ADMIN_USERNAMES || 'admin').split(',').map(username => username.trim());
+    
+    if (!adminEmails.includes(user.email) && !adminUsernames.includes(user.username)) {
+      logger.warn(`Non-admin user attempted admin login: ${user.email}`);
+      return res.status(403).json({ message: 'Access denied - insufficient privileges' });
+    }
+    
+    // Generate admin JWT token
+    const token = jwt.sign(
+      { id: user._id, username: user.username, email: user.email, role: 'admin' },
+      ADMIN_JWT_SECRET,
+      { expiresIn: '2h' } // Shorter expiry for admin tokens
+    );
+    
+    logger.info(`Admin login successful: ${user.username}`);
+    
+    res.json({
+      token,
+      admin: {
+        id: user._id,
+        username: user.username,
+        email: user.email
+      },
+      message: 'Admin login successful'
+    });
+    
+  } catch (error) {
+    logger.error('Admin login error:', error);
+    res.status(500).json({ message: 'Server error during admin login' });
+  }
+});
 
 // Routes for admin dashboard
 router.get('/', authenticateAdmin, (req, res) => {
