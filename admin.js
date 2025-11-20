@@ -34,11 +34,17 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-// Validate admin JWT secret
+// Validate admin JWT secret with fallback
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || process.env.JWT_SECRET;
 if (!ADMIN_JWT_SECRET) {
-  logger.error('ADMIN_JWT_SECRET environment variable is required');
-  throw new Error('ADMIN_JWT_SECRET environment variable is required');
+  // In production, generate a warning but use a default fallback
+  const fallbackSecret = process.env.JWT_SECRET || 'fallback-admin-secret-change-in-production';
+  logger.warn('ADMIN_JWT_SECRET not set, using fallback. Set ADMIN_JWT_SECRET in production for security!');
+  
+  if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+    logger.error('Neither ADMIN_JWT_SECRET nor JWT_SECRET is set in production');
+    throw new Error('JWT_SECRET or ADMIN_JWT_SECRET environment variable is required in production');
+  }
 }
 
 // Admin authentication middleware with proper JWT validation
@@ -94,7 +100,8 @@ const authenticateAdmin = async (req, res, next) => {
     }
     
     // Verify JWT token
-    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
+    const secretToUse = ADMIN_JWT_SECRET || process.env.JWT_SECRET || 'fallback-admin-secret-change-in-production';
+    const decoded = jwt.verify(token, secretToUse);
     
     // Check if user exists and is admin
     const user = await User.findById(decoded.id);
@@ -477,9 +484,10 @@ router.post('/login', async (req, res) => {
     }
     
     // Generate admin JWT token
+    const secretToUse = ADMIN_JWT_SECRET || process.env.JWT_SECRET || 'fallback-admin-secret-change-in-production';
     const token = jwt.sign(
       { id: user._id, username: user.username, email: user.email, role: 'admin' },
-      ADMIN_JWT_SECRET,
+      secretToUse,
       { expiresIn: '2h' } // Shorter expiry for admin tokens
     );
     
